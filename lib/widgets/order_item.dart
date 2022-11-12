@@ -36,7 +36,7 @@ class _OrderItemState extends State<OrderItem> {
             ),
           ),
           if (_expanded)
-            Container(
+            SizedBox(
               height: min(widget.order.products.length * 20.0 + 10, 180),
               child: ListView.builder(
                 itemBuilder: (ctx, i) => Container(
