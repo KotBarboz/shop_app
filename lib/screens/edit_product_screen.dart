@@ -88,7 +88,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  Future<void> _saveForm() async {
+  Future<void> _saveForm(BuildContext context, VoidCallback onSuccess) async {
     final isValid = _form.currentState?.validate();
     if (!isValid!) {
       return;
@@ -99,16 +99,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
 
     if (_editedProduct.id != null && _editedProduct.id != "") {
-      Provider.of<Products>(context, listen: false)
+      await Provider.of<Products>(context, listen: false)
           .updateProduct(_editedProduct.id, _editedProduct);
-      setState(() {
-        _isLoading = false;
-      });
-
-      Navigator.of(context).pop();
     } else {
       try {
-        Provider.of<Products>(context, listen: false)
+        await Provider.of<Products>(context, listen: false)
             .addProduct(_editedProduct);
       } catch (error) {
         await showDialog<void>(
@@ -124,10 +119,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         child: const Text('Ok'))
                   ],
                 ));
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
 
@@ -141,7 +132,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
     //     duration: const Duration(seconds: 2),
     //   ),
     // );
-    Navigator.of(context).pop();
+    setState(() {
+      _isLoading = false;
+    });
+
+    //Navigator.of(context).pop();
+
+    onSuccess.call();
   }
 
   @override
@@ -152,7 +149,22 @@ class _EditProductScreenState extends State<EditProductScreen> {
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveForm,
+            onPressed: () => _saveForm(context, () {
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: Theme.of(context).colorScheme.background,
+                  content: Text('${_editedProduct.title} saved!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.background)),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+              Navigator.of(context).pop();
+            }),
           ),
         ],
       ),
@@ -290,9 +302,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             textInputAction: TextInputAction.done,
                             controller: _imageUrlController,
                             focusNode: _imageUrlFocusNode,
-                            onFieldSubmitted: (_) {
-                              _saveForm();
-                            },
+                            onFieldSubmitted: (_) => _saveForm(context, () {
+                              if (!mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.background,
+                                  content: Text(
+                                      '${_editedProduct.title} saved!',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .background)),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                            }),
                             validator: (value) {
                               if (value == null) {
                                 return 'Please provide a value.';

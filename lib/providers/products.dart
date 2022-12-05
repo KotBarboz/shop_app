@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -123,15 +124,34 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
+      final url = Uri.parse(
+          'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+            'price': newProduct.price
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {
-      print('... updated');
+      print('... updated ??');
     }
   }
+
+  // void updateProduct(String id, Product newProduct) {
+  //   final prodIndex = _items.indexWhere((prod) => prod.id == id);
+  //   if (prodIndex >= 0) {
+  //     _items[prodIndex] = newProduct;
+  //     notifyListeners();
+  //   } else {
+  //     print('... updated');
+  //   }
+  // }
 
   // void updateProduct(String id, Product newProduct) {
   //   final url = Uri.parse(
@@ -161,7 +181,23 @@ class Products with ChangeNotifier {
   // }
 
   void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+    final url = Uri.parse(
+        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _items[existingProductIndex];
+
+    http.delete(url).then((response) {
+      if (response.statusCode >= 400) {
+        throw const HttpException('Could not delete product');
+      }
+      existingProduct = null;
+    }).catchError((_) {
+      _items.insert(existingProductIndex, existingProduct!);
+      notifyListeners();
+    });
+    // _items.removeWhere((prod) => prod.id == id);
+    _items.removeAt(existingProductIndex);
     notifyListeners();
   }
 }
