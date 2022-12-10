@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Product with ChangeNotifier {
   final String id;
@@ -17,8 +20,28 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  void toggleFavoriteStatus() {
+  void toggleFavoriteStatus() async {
+    final oldStatus = isFavorite;
     isFavorite = !isFavorite;
+    notifyListeners();
+
+    final url = Uri.parse(
+        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+    try {
+      final response = await http.patch(url,
+          body: jsonEncode({
+            'isFavorite': isFavorite,
+          }));
+      if (response.statusCode >= 400) {
+        _setFavValue(oldStatus);
+      }
+    } catch (err) {
+      _setFavValue(oldStatus);
+    }
+  }
+
+  void _setFavValue(bool newStatus) {
+    isFavorite = newStatus;
     notifyListeners();
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'product.dart';
@@ -73,6 +74,13 @@ class Products with ChangeNotifier {
         'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products.json');
     try {
       final response = await http.get(url);
+      final responseBody = json.decode(response.body);
+      if (responseBody == null) {
+        if (kDebugMode) {
+          print('extracted.isEmpty');
+        }
+        return;
+      }
       final extracted = json.decode(response.body) as Map<String, dynamic>;
       final List<Product> loadedProducts = [];
       extracted.forEach((prodId, prodData) {
@@ -108,8 +116,10 @@ class Products with ChangeNotifier {
         }),
       );
     } catch (e) {
-      print(e);
-      throw e;
+      if (kDebugMode) {
+        print(e);
+      }
+      rethrow;
     }
 
     final newProduct = Product(
@@ -123,15 +133,36 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
+      final url = Uri.parse(
+          'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+            'price': newProduct.price
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {
-      print('... updated');
+      if (kDebugMode) {
+        print('... updated ??');
+      }
     }
   }
+
+  // void updateProduct(String id, Product newProduct) {
+  //   final prodIndex = _items.indexWhere((prod) => prod.id == id);
+  //   if (prodIndex >= 0) {
+  //     _items[prodIndex] = newProduct;
+  //     notifyListeners();
+  //   } else {
+  //     print('... updated');
+  //   }
+  // }
 
   // void updateProduct(String id, Product newProduct) {
   //   final url = Uri.parse(
@@ -161,7 +192,23 @@ class Products with ChangeNotifier {
   // }
 
   void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+    final url = Uri.parse(
+        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _items[existingProductIndex];
+
+    http.delete(url).then((response) {
+      if (response.statusCode >= 400) {
+        throw const HttpException('Could not delete product');
+      }
+      existingProduct = null;
+    }).catchError((_) {
+      _items.insert(existingProductIndex, existingProduct!);
+      notifyListeners();
+    });
+    // _items.removeWhere((prod) => prod.id == id);
+    _items.removeAt(existingProductIndex);
     notifyListeners();
   }
 }
