@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../keys.dart';
+
 class Product with ChangeNotifier {
   final String id;
   final String title;
@@ -20,13 +22,12 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  void toggleFavoriteStatus() async {
+  void toggleFavoriteStatus(String token) async {
     final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
 
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json');
+    final url = Uri.parse('${URL_BASE}products/$id.json?auth=$token');
     try {
       final response = await http.patch(url,
           body: jsonEncode({

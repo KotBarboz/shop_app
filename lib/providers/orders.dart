@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shop_app/models/http_exception.dart';
 
+import '../keys.dart';
+import '../models/http_exception.dart';
 import '../providers/cart.dart';
 
 class OrderItem {
@@ -27,11 +28,14 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
+  final String authToken;
+
+  Orders(this.authToken, this._orders);
+
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     http.Response response;
 
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
+    final url = Uri.parse('${URL_BASE}orders.json?auth=$authToken');
     final timeStamp = DateTime.now();
 
     try {
@@ -72,8 +76,7 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> fetchAnsSetOrders() async {
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
+    final url = Uri.parse('${URL_BASE}orders.json?auth=$authToken');
 
     try {
       final response = await http.get(url);

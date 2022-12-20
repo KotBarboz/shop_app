@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../keys.dart';
 import 'product.dart';
 
 class Products with ChangeNotifier {
@@ -74,8 +75,7 @@ class Products with ChangeNotifier {
   // }
 
   Future<void> fetchAndSetProducts() async {
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
+    final url = Uri.parse('${URL_BASE}products.json?auth=$authToken');
     try {
       final response = await http.get(url);
       final responseBody = json.decode(response.body);
@@ -109,8 +109,7 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     http.Response response;
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
+    final url = Uri.parse('${URL_BASE}products.json?auth=$authToken');
     try {
       response = await http.post(
         url,
@@ -143,8 +142,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
-      final url = Uri.parse(
-          'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken');
+      final url = Uri.parse('${URL_BASE}products/$id.json?auth=$authToken');
       await http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -173,7 +171,7 @@ class Products with ChangeNotifier {
 
   // void updateProduct(String id, Product newProduct) {
   //   final url = Uri.parse(
-  //       'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+  //       '${URL_BASE}products.json');
   //   http
   //       .post(
   //     url,
@@ -199,8 +197,7 @@ class Products with ChangeNotifier {
   // }
 
   void deleteProduct(String id) {
-    final url = Uri.parse(
-        'https://movieok-8e4a3-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken');
+    final url = Uri.parse('$URL_BASE$id.json?auth=$authToken');
 
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];
