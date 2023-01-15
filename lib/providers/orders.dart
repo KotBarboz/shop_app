@@ -29,13 +29,14 @@ class Orders with ChangeNotifier {
   }
 
   final String authToken;
+  final String userId;
 
-  Orders(this.authToken, this._orders);
+  Orders(this.authToken, this.userId, this._orders);
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     http.Response response;
 
-    final url = Uri.parse('${URL_BASE}orders.json?auth=$authToken');
+    final url = Uri.parse('${URL_BASE}orders/$userId.json?auth=$authToken');
     final timeStamp = DateTime.now();
 
     try {
@@ -76,7 +77,7 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> fetchAnsSetOrders() async {
-    final url = Uri.parse('${URL_BASE}orders.json?auth=$authToken');
+    final url = Uri.parse('${URL_BASE}orders/$userId.json?auth=$authToken');
 
     try {
       final response = await http.get(url);
