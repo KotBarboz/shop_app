@@ -9,10 +9,14 @@ import '../models/http_exception.dart';
 class Auth with ChangeNotifier {
   String _token = '';
   DateTime _expiryDate = DateTime.now();
-  String userId = '';
+  String _userId = '';
 
   bool get isAuth {
     return token.isNotEmpty;
+  }
+
+  String get userId {
+    return _userId;
   }
 
   String get token {
@@ -42,7 +46,7 @@ class Auth with ChangeNotifier {
       }
 
       _token = responseData['idToken'];
-      userId = responseData['localId'];
+      _userId = responseData['localId'];
       _expiryDate = DateTime.now()
           .add(Duration(seconds: int.parse(responseData['expiresIn'])));
       notifyListeners();
@@ -57,5 +61,11 @@ class Auth with ChangeNotifier {
 
   Future<void> login(String email, String password) async {
     return _authenticate(email, password, 'signInWithPassword');
+  }
+
+  void logout() async {
+    _token = '';
+    _userId = '';
+    notifyListeners();
   }
 }
