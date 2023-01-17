@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/helpers/custom_route.dart';
 import 'package:shop_app/screens/splash_screen.dart';
 
 import '../providers/auth.dart';
@@ -47,6 +48,12 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.purple)
                   .copyWith(secondary: Colors.deepOrange),
               fontFamily: 'Lato',
+              pageTransitionsTheme: PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: CustomPageTransitionBuilder(),
+                  TargetPlatform.iOS: CustomPageTransitionBuilder(),
+                },
+              ),
             ),
             home: auth.isAuth
                 ? ProductsOverviewScreen()
